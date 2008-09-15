@@ -63,6 +63,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 
 	end # end test
 
+  # Test that the to_s producs a string
+  # Simple check that the correct Type of object is produced.
+  # Tests should probably do a simple parse, for known words.
 	def test_to_s
     @valid_csv_files.each do |csv_file|
 		  smc = StateModelCreator.new(csv_file)
@@ -101,6 +104,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 
   # Create Dot Graph
   # 
+  # Creates dot graph (GraphViz) and then checks that it can be sritten out.
+  # This helps to ensure its a kosher graphviz object.
+  #
   def test_create_dot_graph
     @valid_csv_files.each do |csv_file|
       puts csv_file
@@ -139,10 +145,12 @@ class StateModelCreator__tests < Test::Unit::TestCase
     end # Assert Raises
 		
 	end # end 
+	 
 	  
 	# Random Walk
 	# Sanity check % stats returned
 	# Also do a specific check...
+	#
 	def test_random_walk_muliple
 	  @valid_csv_files.each do |csv_file|
   		smc = StateModelCreator.new(csv_file)	  
@@ -164,6 +172,8 @@ class StateModelCreator__tests < Test::Unit::TestCase
   
   # Walk-State and transition coverage
   #
+  # Sanity check that the values are within relaistic constraints
+  #
   def check_coverage_stats(the_walk)
 		# Check coverage stats are sane.
 		assert(the_walk.state_coverage <= 100 , "Check State coverage is <=100")
@@ -174,6 +184,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
   end # end coverage stats
 
   # Random Walk
+  #
+  # Check that the Random Walker follows a simple straight line graph ok.
+  # Path is detirministic as there is only one option for progression on each node.
   #
   def test_random_walk_many_straight_steps
     smc = StateModelCreator.new(TEST5_CSV)
@@ -204,8 +217,10 @@ class StateModelCreator__tests < Test::Unit::TestCase
 
   end # end test
 
+
   # General: Death tests
   # Ensure the system exits with Runtime Errors when blatantly bad data is provided.
+  #
 	def test_random_walk_file_issues
 	  # Missing CSV file
 		assert_raises RuntimeError do
@@ -222,6 +237,7 @@ class StateModelCreator__tests < Test::Unit::TestCase
 			smc = StateModelCreator.new(@path + TEST3_0LINE_CSV)
 		end # Assert Raises	
 	end # end test
+	
 	
 	# Drive Using
 	# drive_using can directly control a sut driver object and follow a given walk.
@@ -248,6 +264,7 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	  assert_equal(sut_driver.states_tested , models_states)
 	  
   end # end driver tests
+	
 	
 	# Drive Using
 	# Just check a runtime error is raised when a string is passsed in
