@@ -33,16 +33,16 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	TEST1_CSV="test1.csv"           # Simple 2 state 2 action table
 	TEST2_1LINE_CSV="test2.csv"     # Only has 1 line
 	TEST3_0LINE_CSV="test3.csv"     # Has no lines
-	TEST4_CSV="test4.csv"           # Has a dead end
+	TEST4_CSV="test4.csv"           # Line with fork, UNIX format txt
 	TEST5_CSV="test5.csv"           # Several states in a row, single file
-  TEST10_CSV="test10.csv"         # Line with fork
+  TEST10_CSV="test10.csv"         # Line with fork, DOS format txt
   
   TEST1_2d_CSV="test1_2d.csv"           # Simple 2 state 2 action table
 	TEST2_2d_1LINE_CSV="test2_2d.csv"     # Only has 1 line
 	TEST3_2d_0LINE_CSV="test3_2d.csv"     # Has no lines
-	TEST4_2d_CSV="test4_2d.csv"           # Has a dead end
+	TEST4_2d_CSV="test4_2d.csv"           # Line with fork, UNIX format txt
 	TEST5_2d_CSV="test5_2d.csv"           # Several states in a row, single file
-  TEST10_2d_CSV="test10_2d.csv"         # Line with fork
+  TEST10_2d_CSV="test10_2d.csv"         # Line with fork, DOS format txt
 	
   
 	def setup
