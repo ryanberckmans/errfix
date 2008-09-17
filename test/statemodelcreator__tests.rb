@@ -37,18 +37,77 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	TEST5_CSV="test5.csv"           # Several states in a row, single file
   TEST10_CSV="test10.csv"         # Line with fork
   
+  TEST1_2d_CSV="test1_2d.csv"           # Simple 2 state 2 action table
+	TEST2_2d_1LINE_CSV="test2_2d.csv"     # Only has 1 line
+	TEST3_2d_0LINE_CSV="test3_2d.csv"     # Has no lines
+	TEST4_2d_CSV="test4_2d.csv"           # Has a dead end
+	TEST5_2d_CSV="test5_2d.csv"           # Several states in a row, single file
+  TEST10_2d_CSV="test10_2d.csv"         # Line with fork
+	
+  
 	def setup
 	  @path = File.expand_path(File.dirname(__FILE__) + "/../test")
     @path = @path + "/"
+    
+    # For 1-Dimensional State tables
 	  @valid_csv_files=[@path + TEST1_CSV,@path + TEST4_CSV,@path + TEST10_CSV]
 	  puts @valid_csv_files
 	  @valid_csv_files_states=[2,5,5]
 	  @valid_csv_files_transitions=[2,4,4]
+	  
+	  # For 2-Dimensional State tables
+	  @valid_csv_files_2d=[@path + TEST1_2d_CSV,@path + TEST4_2d_CSV,@path + TEST10_2d_CSV]
+	  puts @valid_csv_files_2d
+	  @valid_csv_files_states_2d=[2,5,5]
+	  @valid_csv_files_transitions_2d=[2,4,4]
+	  
 	end # end setup method
 
+
+  # Check that errfix can correctly detect whether the CSV represents
+  # a 1 or 2 dimenional State table.
+  #
+  # 1 Dimensional
+  def test_detect_state_table_one_dimensional    
+    @valid_csv_files.each do |csv_file|
+      smc = StateModelCreator.new
+	    dimensions = smc.detect_state_table_dim(csv_file)
+      assert_equal(:one_d , dimensions ,"Check that one dimensional state tables are detected")
+    end # end csv files		
+  end # end test method
+  
+  # 2 Dimensional
+  def test_detect_state_table_two_dimensional    
+    @valid_csv_files_2d.each do |csv_file|
+      smc = StateModelCreator.new
+	    dimensions = smc.detect_state_table_dim(csv_file)
+      assert_equal(:two_d , dimensions ,"Check that Two dimensional state tables are detected")
+    end # end csv files		
+  end # end test method
+
+
+  # Neither 1 or 2 D, should raise RuntimrError
+   def test_detect_state_table__empty_file    
+ 		assert_raises RuntimeError do
+ 			smc = StateModelCreator.new
+ 			puts "Next test_detect_state_table__empty_file: "
+ 			smc.detect_state_table_dim(@path + TEST3_0LINE_CSV)
+ 		end # Assert Raises	
+  end # end test method
+
+  def test_detect_state_table_missing_file
+    # Missing CSV file
+		assert_raises RuntimeError do
+			smc = StateModelCreator.new
+			smc.detect_state_table_dim("madeupname_that_just_aint_real.csv")
+		end # Assert Raises
+	end # end method
+
+
 	def test_state_store_general
-		smc = StateModelCreator.new(@path + TEST1_CSV)
-	
+		smc = StateModelCreator.new
+	  smc.load_table(@path + TEST1_CSV)
+	  
 		# Check that the states store is an array of strings
 		assert_equal(Array.new.class,smc.states_store.class, "States Store is an Array")
 		assert_equal(String.new.class ,smc.states_store[0].class, "States Store Array contains Strings")
@@ -68,8 +127,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
   # Tests should probably do a simple parse, for known words.
 	def test_to_s
     @valid_csv_files.each do |csv_file|
-		  smc = StateModelCreator.new(csv_file)
-
+		  smc = StateModelCreator.new
+      smc.load_table(csv_file)
+      
 		  assert_equal(String.new.class , smc.to_s.class , "Check that the to_s produces a string ok")
 		  puts smc.to_s
 		end # end csv files
@@ -78,7 +138,8 @@ class StateModelCreator__tests < Test::Unit::TestCase
   # Get Actions For State
   # Check that the state returns correct actions
 	def test_get_actions_for_state
-		smc = StateModelCreator.new(@path + TEST1_CSV)
+		smc = StateModelCreator.new
+		smc.load_table(@path + TEST1_CSV)
 		
 		# Check that correct actions are returned
 		assert_equal("action1",smc.get_actions_for_state("STATEA")[0],"Check first action is action1")
@@ -90,7 +151,8 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	  @valid_csv_files.each_index do |index|
 	    csv_file=@valid_csv_files[index]
 	    
-		  smc = StateModelCreator.new(csv_file)
+		  smc = StateModelCreator.new
+		  smc.load_table(csv_file)
 
 		  # Check that Adjacency Matrix is ok, this is actually the adjacency matrix
 		  assert_equal(Hash.new.class,smc.adjacency_matrix.class, "Check the state is the right class.")
@@ -110,7 +172,8 @@ class StateModelCreator__tests < Test::Unit::TestCase
   def test_create_dot_graph
     @valid_csv_files.each do |csv_file|
       puts csv_file
-      smc = StateModelCreator.new(csv_file)
+      smc = StateModelCreator.new
+      smc.load_table(csv_file)
 
 		  # Create the Graphiz graph object, see if it fails...
 		  smc_graph = smc.create_dot_graph	
@@ -128,7 +191,8 @@ class StateModelCreator__tests < Test::Unit::TestCase
   # Random Walk
   #
 	def test_random_walk_simple
-		smc = StateModelCreator.new(@path + TEST1_CSV)
+		smc = StateModelCreator.new
+		smc.load_table(@path + TEST1_CSV)
 		
 		# Check standard length walk
 		the_walk = smc.random_walk("STATEA")
@@ -153,7 +217,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	#
 	def test_random_walk_muliple
 	  @valid_csv_files.each do |csv_file|
-  		smc = StateModelCreator.new(csv_file)	  
+  		smc = StateModelCreator.new	  
+  		smc.load_table(csv_file)
+  		
 	    the_walk = smc.random_walk("STATEA")
 		
 	    # Puts it, hope there is no exceptions
@@ -163,7 +229,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
     end # end loop over csvs
 	
 	  # Specific checks for coverage on this model
-	  smc = StateModelCreator.new(TEST10_CSV)	  
+	  smc = StateModelCreator.new	  
+	  smc.load_table(TEST10_CSV)
+	  
 		a_walk = smc.random_walk("STATEA")
     assert_equal(80 , a_walk.state_coverage , "Check State coverage is 80% for TEST10_CSV")
 		assert_equal(75 , a_walk.transition_coverage , "Check Transition coverage is 75% for TEST10_CSV")
@@ -189,7 +257,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
   # Path is detirministic as there is only one option for progression on each node.
   #
   def test_random_walk_many_straight_steps
-    smc = StateModelCreator.new(TEST5_CSV)
+    smc = StateModelCreator.new
+		smc.load_table(TEST5_CSV)
+		
 		the_walk = smc.random_walk("STATEA")
 
     # Check that the transitions are found (when only 1 choice) and ordered correctly
@@ -222,19 +292,17 @@ class StateModelCreator__tests < Test::Unit::TestCase
   # Ensure the system exits with Runtime Errors when blatantly bad data is provided.
   #
 	def test_random_walk_file_issues
-	  # Missing CSV file
-		assert_raises RuntimeError do
-			smc = StateModelCreator.new("madeupname_that_just_aint_real.csv")
-		end # Assert Raises
 		
 		# CSV file with just a header
 		assert_raises RuntimeError do
-			smc = StateModelCreator.new(@path + TEST2_1LINE_CSV)
+			smc = StateModelCreator.new
+			smc.load_table(@path + TEST2_1LINE_CSV)
 		end # Assert Raises	
 		
 		# A CSV File with nothing in it.
 		assert_raises RuntimeError do
-			smc = StateModelCreator.new(@path + TEST3_0LINE_CSV)
+			smc = StateModelCreator.new
+			smc.load_table(@path + TEST3_0LINE_CSV)
 		end # Assert Raises	
 	end # end test
 	
@@ -244,7 +312,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	# The 'walk' is passed the 'driver', the walk then executes any transitions contained in the walk.
 	# Assertions are placed in the driver and therefore executed as part of this process.
 	def test_model_driver_simple
-	  system_model = StateModelCreator.new(TEST10_CSV) # Create model
+	  system_model = StateModelCreator.new # Create model
+	  system_model.load_table(TEST10_CSV)
+	  
 		model_walk = system_model.random_walk("STATEA")  # Create walk starting at ...
 		
 		sut_driver = EgTestDriver.new     # Instantiate your target system's test driver
@@ -272,7 +342,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	# To allow any old code /driver to be used though - means i 
 	# can not be very specific about what i allow.
 	def test_model_driver_messy
-	  system_model = StateModelCreator.new(TEST10_CSV) # Create model
+	  system_model = StateModelCreator.new # Create model
+	  system_model.load_table(TEST10_CSV)
+	  
 		model_walk = system_model.random_walk("STATEA")  # Create walk starting at ...
 		
 		sut_driver = String.new             # Instantiate bogus test driver
@@ -287,7 +359,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
 	def test_extract_valid_transitions
 
 	  @valid_csv_files.each_index do |csv_file_index|
-  	  system_model = StateModelCreator.new(@valid_csv_files[csv_file_index]) # Create model
+  	  system_model = StateModelCreator.new # Create model
+  	  system_model.load_table(@valid_csv_files[csv_file_index])
+  	  
 		  # Test that correct number of transitions were extracted
 		  assert_equal(@valid_csv_files_transitions[csv_file_index], system_model.extract_valid_transitions.length, "Check for correct number of transitions: #{@valid_csv_files[csv_file_index]}")
 		end # end csv files
@@ -295,7 +369,9 @@ class StateModelCreator__tests < Test::Unit::TestCase
     # Check specific example has correct values set
     
     # Manually create 2 transitions, These match those in TEST1_CSV
-    system_model = StateModelCreator.new(TEST1_CSV) # Create model
+    system_model = StateModelCreator.new # Create model
+    system_model.load_table(TEST1_CSV)
+    
     correct_transition1=TransitionHolder.new("STATEA","action1","STATEB")
     correct_transition2=TransitionHolder.new("STATEB","action2","STATEA")
     # Obtain our extracted transitions
