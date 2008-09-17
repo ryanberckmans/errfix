@@ -50,6 +50,7 @@ class StateModelCreator
 	
 	# Exceptions
   MISSING_CSV="Missing CSV file"
+  EMPTY_CSV="State Table File is Empty"
 
 	attr_accessor(:adjacency_matrix,:states_store,:the_dot_graph,:debug)
 
@@ -83,15 +84,66 @@ public
 # Creates a FSM style model of software based on the contents of a CSV file.
 #
 # debug_flag  - Optional, set to false to eliminate debug, true to show
-	def initialize(csv_state_table, debug_flag=true)
+	def initialize(debug_flag=true)
 
 		# Output debug?
 		self.debug= debug_flag
-		
-		# Read in the CSV data, and store in hash (adjacency matrix)
-		self.adjacency_matrix= create_adjacency_matrix(read_csv_file(csv_state_table))
 
 	end # end def
+
+#
+# Load the CSV file into memory
+#
+  def load_table(csv_state_table)
+    
+    # Detect dimensions of state table.
+     #detect_state_table_dim(csv_state_table)
+		# Read in the CSV data, and store in hash (adjacency matrix)
+		self.adjacency_matrix= create_adjacency_matrix(read_csv_file(csv_state_table))
+		
+  end # end method
+
+  # Detect whether the CSV file contains a 1 or 2 dimensional State Table
+  #
+  # Returns :one_d or :two_d 
+  #
+  def detect_state_table_dim(csv_state_table)
+    raise MISSING_CSV unless File.exist?(csv_state_table)
+    raise EMPTY_CSV unless File.size(csv_state_table)>0
+    
+    # What Type of State table do we think this is?
+    cell_probable=:unknown
+	  
+	  csv_file = File.open(csv_state_table, 'r')
+	  puts_debug "Detecting on file: #{csv_state_table}"
+    
+    puts_debug csv_file.readlines
+    csv_file.close
+    csv_file = File.open(csv_state_table, 'r')
+	  
+    
+    CSV::Reader.parse(csv_file) do |row_array|
+      puts_debug "Detecting State table: row length? #{row_array.length}"
+      
+		  top_left_cell = row_array[0]
+		  puts_debug "TOP LEFT CELL:#{top_left_cell}:"
+		  if (top_left_cell.chomp.downcase=="Start/End".downcase)
+		      cell_probable=:two_d
+		      break
+	      elsif (top_left_cell.chomp.downcase=="Start State".downcase)
+		      cell_probable=:one_d
+	        break
+	      else
+	        raise "Error: Type: #{cell_probable}: Unable to Detect whether this is a 1 or 2 Dimensional State Table"
+	        break
+		  end # end if  
+    end # end CSV
+    
+    csv_file.close
+    
+    return cell_probable
+  
+  end # end method
 
 #
 # List on standard out each state and the actions associated with it
@@ -117,8 +169,6 @@ public
 	#
 	def read_csv_file(state_table_path)
     
-    raise MISSING_CSV unless File.exist?(state_table_path)
-
     rows_read=0
 		state_transition_list= Array.new
 		ignore_first_row = true
