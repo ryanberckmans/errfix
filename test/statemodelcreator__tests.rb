@@ -50,16 +50,22 @@ class StateModelCreator__tests < Test::Unit::TestCase
     @path = @path + "/"
     
     # For 1-Dimensional State tables
-	  @valid_csv_files=[@path + TEST1_CSV,@path + TEST4_CSV,@path + TEST10_CSV]
-	  puts @valid_csv_files
-	  @valid_csv_files_states=[2,5,5]
-	  @valid_csv_files_transitions=[2,4,4]
+	  @valid_csv_files_1d=[@path + TEST1_CSV,@path + TEST4_CSV,@path + TEST10_CSV]
+	  puts @valid_csv_files_1d
+	  @valid_csv_files_states_1d=[2,5,5]
+	  @valid_csv_files_transitions_1d=[2,4,4]
 	  
 	  # For 2-Dimensional State tables
 	  @valid_csv_files_2d=[@path + TEST1_2d_CSV,@path + TEST4_2d_CSV,@path + TEST10_2d_CSV]
 	  puts @valid_csv_files_2d
 	  @valid_csv_files_states_2d=[2,5,5]
 	  @valid_csv_files_transitions_2d=[2,4,4]
+	  
+	  # For 1 and 2 Dimensional State tables
+	  @valid_csv_files=@valid_csv_files_1d + @valid_csv_files_2d
+	  puts @valid_csv_files
+	  @valid_csv_files_states=[2,5,5,2,5,5]
+	  @valid_csv_files_transitions=[2,4,4,2,4,4]
 	  
 	end # end setup method
 
@@ -69,10 +75,10 @@ class StateModelCreator__tests < Test::Unit::TestCase
   #
   # 1 Dimensional
   def test_detect_state_table_one_dimensional    
-    @valid_csv_files.each do |csv_file|
+    @valid_csv_files_1d.each do |csv_file|
       smc = StateModelCreator.new
 	    dimensions = smc.detect_state_table_dim(csv_file)
-      assert_equal(:one_d , dimensions ,"Check that one dimensional state tables are detected")
+      assert_equal(:one_d , dimensions ,"Check that one dimensional state tables are detected in #{csv_file}")
     end # end csv files		
   end # end test method
   
@@ -81,7 +87,7 @@ class StateModelCreator__tests < Test::Unit::TestCase
     @valid_csv_files_2d.each do |csv_file|
       smc = StateModelCreator.new
 	    dimensions = smc.detect_state_table_dim(csv_file)
-      assert_equal(:two_d , dimensions ,"Check that Two dimensional state tables are detected")
+      assert_equal(:two_d , dimensions ,"Check that Two dimensional state tables are detected in #{csv_file}")
     end # end csv files		
   end # end test method
 
@@ -155,12 +161,12 @@ class StateModelCreator__tests < Test::Unit::TestCase
 		  smc.load_table(csv_file)
 
 		  # Check that Adjacency Matrix is ok, this is actually the adjacency matrix
-		  assert_equal(Hash.new.class,smc.adjacency_matrix.class, "Check the state is the right class.")
-		  assert_equal(@valid_csv_files_states[index],smc.adjacency_matrix.keys.length, "Check for correct number of states")
+		  assert_equal(Hash.new.class,smc.adjacency_matrix.class, "Check state is the right class in #{csv_file}.")
+		  assert_equal(@valid_csv_files_states[index],smc.adjacency_matrix.keys.length, "Check correct number of states in #{csv_file}")
 
 		  transition_obj=smc.adjacency_matrix.shift[1][0]
-		  assert_equal(TransitionHolder.new.class , transition_obj.class, "Check hash is full of transitions")
-		  assert_equal(String.new.class , transition_obj.start_state.class , "Check start state is a string class")
+		  assert_equal(TransitionHolder.new.class , transition_obj.class, "Check hash is full of transitions in #{csv_file}")
+		  assert_equal(String.new.class , transition_obj.start_state.class , "Check start state is a string class in #{csv_file}")
     end # end each file
 	end # end test
 
