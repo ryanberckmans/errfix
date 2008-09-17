@@ -117,15 +117,11 @@ public
 	  csv_file = File.open(csv_state_table, 'r')
 	  puts_debug "Detecting on file: #{csv_state_table}"
     
-    puts_debug csv_file.readlines
-    csv_file.close
-    csv_file = File.open(csv_state_table, 'r')
-    
     CSV::Reader.parse(csv_file) do |row_array|
       puts_debug "Detecting State table: row length? #{row_array.length}"
       
 		  top_left_cell = row_array[0]
-		  puts_debug "TOP LEFT CELL:#{top_left_cell}:"
+
 		  if (top_left_cell.chomp.downcase=="Start/End".downcase)
 		      cell_probable=:two_d
 		      break
@@ -164,10 +160,28 @@ public
 		return out_str
 	end # end method
 
+
 	# Read in the CSV file that contains state-action-state information
 	#
-	def read_csv_file(state_table_path)
+	# This in fact forwards to correct parser, depending on dimensions of the table file
+	#
+	def read_csv_file(csv_table_path)
     
+    table_dimensions = detect_state_table_dim(csv_table_path)
+    
+    if table_dimensions==:one_d
+      return read_1d_csv_file(csv_table_path)
+    elsif table_dimensions==:two_d
+      return read_2d_csv_file(csv_table_path)
+    else
+      raise "Error: CSV File dimensions: #{table_dimensions}"
+    end # end if else 
+    
+  end # end method
+    
+  # Read in data from a 1d file
+  # 
+  def read_1d_csv_file(state_table_path)  
     rows_read=0
 		state_transition_list= Array.new
 		ignore_first_row = true
@@ -191,6 +205,45 @@ public
 		return state_transition_list
 
 	end # end csv file load
+
+  # Read in data from 2d file
+  def read_2d_csv_file(state_table_path)  
+    rows_read=0
+		state_transition_list= Array.new
+		grab_first_row = true
+    too_states=Array.new
+    row_trans_list=Array.new
+
+		CSV::Reader.parse(File.open(state_table_path, 'r')) do |row_array|
+			# First row should contain state names
+			if grab_first_row
+				grab_first_row=false
+				too_states = row_array
+				too_states.shift
+			else
+			  row_trans_list=row_array
+			  this_rows_start_state = row_trans_list.shift
+			  
+			  row_trans_list.each_index do |cell_index|
+			    if row_trans_list[cell_index] != nil
+				    transition = TransitionHolder.new(this_rows_start_state.to_s, row_trans_list[cell_index].to_s, too_states[cell_index].to_s)
+				    puts_debug "Read in transitions: #{transition}"
+				    
+				    # Store that transition
+				    state_transition_list.push transition 
+			    end # if nil
+			  end # end each index
+			  
+			end # if first row
+			rows_read +=1
+		end # end csv block
+
+    raise "CSV File Empty" if rows_read==0
+    raise "Missing Data in CSV File" if rows_read==1
+    
+		# return state table, its a raw list of transition objects
+		return state_transition_list
+  end # end method
 
 
 	def create_adjacency_matrix(raw_state_transition_list)
