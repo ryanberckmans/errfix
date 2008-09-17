@@ -120,7 +120,6 @@ public
     puts_debug csv_file.readlines
     csv_file.close
     csv_file = File.open(csv_state_table, 'r')
-	  
     
     CSV::Reader.parse(csv_file) do |row_array|
       puts_debug "Detecting State table: row length? #{row_array.length}"
