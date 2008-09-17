@@ -115,9 +115,10 @@ public
     cell_probable=:unknown
 	  
 	  csv_file = File.open(csv_state_table, 'r')
+	  
 	  puts_debug "Detecting on file: #{csv_state_table}"
-    
-    CSV::Reader.parse(csv_file) do |row_array|
+
+    CSV::Reader.parse( csv_file.read.gsub(/\r/,"\n") ) do |row_array|
       puts_debug "Detecting State table: row length? #{row_array.length}"
       
 		  top_left_cell = row_array[0]
@@ -186,7 +187,7 @@ public
 		state_transition_list= Array.new
 		ignore_first_row = true
 
-		CSV::Reader.parse(File.open(state_table_path, 'r')) do |row_array|
+		CSV::Reader.parse(File.open(state_table_path, 'r').read.gsub(/\r/,"\n")) do |row_array|
 			# First row should be the header
 			if ignore_first_row
 				ignore_first_row=false
@@ -213,8 +214,10 @@ public
 		grab_first_row = true
     too_states=Array.new
     row_trans_list=Array.new
-
-		CSV::Reader.parse(File.open(state_table_path, 'r')) do |row_array|
+    puts "CSV should be unix format:"
+    
+		CSV::Reader.parse(File.open(state_table_path, 'r').read.gsub(/\r/,"\n") ) do |row_array|
+		  
 			# First row should contain state names
 			if grab_first_row
 				grab_first_row=false
