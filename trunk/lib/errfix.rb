@@ -486,6 +486,25 @@ class Walk
   
   end # end trans uniq
 
+  # Drive Using
+  # Directs -sut_driver- by calling methods related to States and Transitions in the Walk.
+  # -sut_driver-  is the Page or system driver for the System Under Test.
+  #
+  # States in the Walk must correspond to methods in the sut_driver named: test_STATE_NAME
+  # Transitions in the Walk must correspond to methods in the sut_driver named: ACTION_NAME
+  # 
+  # e.g.: If the system under test has the states LOGGED_OUT,LOGGED_IN and a action of 
+  # 'enter_login_details' that forms a transition between these two states, then your -sut_driver-
+  #  should have the methods:
+  # test_LOGGED_OUT
+  # test_LOGGED_IN
+  # enter_login_details
+  # 
+  # The methods methods named 'test_XXX' should contain code designed to test that the state XXX 
+  # has been successfully reached and is not actually any other state.
+  # The other methods e.g. 'enter_login_details' are for driving functionality that drives the
+  # system from one state to another, e.g from LOGGED_OUT to LOGGED_IN  in this case.
+  #
   def drive_using(sut_driver)
     
     raise "String - Not be a SUT Driver: Error" if (sut_driver.class==String.new.class) 
